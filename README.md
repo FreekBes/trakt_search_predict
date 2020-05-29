@@ -9,6 +9,6 @@ With this extension installed, you will find it's much easier to search for item
 
 ## Download
 - [Google Chrome](https://chrome.google.com/webstore/detail/aelihdggbimbhmgnjghphaliainkknid) (Coming soon)
-- [Mozilla Firefox](https://addons.mozilla.org/nl/firefox/addon/search-predict-for-trakt-tv/) (Coming soon)
-- [Opera](https://addons.opera.com/nl/extensions/details/search-predict-for-trakttv/) (Coming soon)
+- [Mozilla Firefox](https://addons.mozilla.org/addon/search-predict-for-trakt-tv/)
+- [Opera](https://addons.opera.com/extensions/details/search-predict-for-trakttv/) (Coming soon)
 - [ZIP for manual installation](https://github.com/FreekBes/trakt_search_predict/archive/master.zip)
