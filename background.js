@@ -1,39 +1,31 @@
 'use strict';
 
-var searchXhr = null;
-
 // omnibox search
-chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
-    text = text.trim();
-    if (text != "") {
-        traktSearch(text, null)
-            .then(function(results) {
-                var suggestResults = [];
-                for (var i = 0; i < results.length; i++) {
-                    var tempRes = {};
-                    switch (results[i]["type"]) {
-                        case "movie":
-                            tempRes.description = results[i]["movie"]["title"] + (results[i]["movie"]["year"] != null ? " ("+results[i]["movie"]["year"]+")" : "");
-                            tempRes.content = "https://trakt.tv/movies/" + results[i]["movie"]["ids"]["slug"];
-                            break;
-                        case "show":
-                            tempRes.description = results[i]["show"]["title"] + (results[i]["show"]["year"] != null ? " ("+results[i]["show"]["year"]+")" : "");
-                            tempRes.content = "https://trakt.tv/shows/" + results[i]["show"]["ids"]["slug"];
-                            break;
-                        default:
-                            continue;
-                    }
-                    suggestResults.push(tempRes);
-                }
-                suggest(suggestResults);
-            })
-            .catch(function(error) {
-                suggest([]);
-            });
-    }
-    else {
-        suggest([]);
-    }
+chrome.omnibox.setDefaultSuggestion({
+    description: "Search Trakt.tv for %s"
+});
+
+chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
+    var url = "https://trakt.tv/";
+	if ((text != null || text != undefined) && text.trim() != "") {
+		url += "search?query=" + encodeURIComponent(text);
+	}
+	if (disposition == "newForegroundTab") {
+		chrome.tabs.create({
+			url: url,
+			active: true
+		});
+	}
+	else if (disposition == "newBackgroundTab") {
+		chrome.tabs.create({
+			url: url,
+			active: false
+		});
+	}
+	else {
+		// disposition == "currentTab"
+		chrome.tabs.update(null, {url: url});
+	}
 });
 
 var controller = new AbortController();

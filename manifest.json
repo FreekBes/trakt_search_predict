@@ -2,9 +2,9 @@
     "manifest_version": 2,
     "name": "Search Predict for Trakt.tv",
     "short_name": "Search Predict for Trakt",
-    "version": "1.0.0",
-    "version_name": "1.0.0",
-    "description": "This extension adds search predictions (autocomplete) to the search bar in the header of Trakt.tv",
+    "version": "1.1.0",
+    "version_name": "1.1.0",
+    "description": "This extension adds search predictions (autocomplete) to the search bar in the header of Trakt.tv.",
     "icons": {
 		"16": "images/logo16.png",
 		"32": "images/logo32.png",
@@ -15,6 +15,8 @@
 	},
 	"permissions": [
         "*://*.trakt.tv/*",
+        "*://image.tmdb.org/*",
+        "*://api.themoviedb.org/*",
         "storage"
     ],
 
