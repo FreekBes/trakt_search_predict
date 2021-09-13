@@ -16,22 +16,34 @@ var omniSuggestions = {
 };
 
 var controller = new AbortController();
+var sPort = null;
 
-// omnibox default search, not on firefox
+// omnibox default search, not on firefox.
 // firefox is buggy with this function,
 // not supporting %s and when set in the onInputChanged event
-// it won't include the last letter from the "text" string
+// with the "text" parameter from that function,
+// it won't include the last letter from the "text" string.
+// kinda weird. just don't include it then.
 if (window.navigator.userAgent.indexOf("Firefox") == -1) {
 	chrome.omnibox.setDefaultSuggestion({
 		description: "Search Trakt.tv for %s"
 	});
 }
 
-// omnibox search suggestions
+// omnibox search suggestions. suggest parameter should be a function.
+// first, we abort any currently ongoing request to Trakt's API, useful for people who
+// type very quickly (the API call takes a while and it would clog up otherwise).
+// we store all results from the search predict in the global omniSuggestions object,
+// for future use (retrieving the URL from the chosen prediction).
+// on any browser that's not Firefox, we add XML styling to the search prediction,
+// as seen on https://developer.chrome.com/docs/extensions/reference/omnibox/#type-SuggestResult
+// Mozilla Firefox doesn't seem to support this XML styling.
+// we add all the suggestions to the object and let the browser know this list is ready.
 chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 	text = text.trim();
 	if (typeof suggest == "function") {
 		controller.abort();
+		sPort.postMessage({action: "aborted"});
 		traktSearch(text, null)
 			.then(function(results) {
 				omniSuggestions.clear();
@@ -77,7 +89,13 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 	}
 });
 
-// omnibox suggestion chosen or enter hit
+// this is the function that's run when the user has chosen one of our extension's
+// search suggestions. it first checks if it was any of our suggestions from
+// onInputChanged event's function above, if it was we get the url from there.
+// in case not, we create a new search on the Trakt.tv website with the query
+// given to us in the address bar.
+// based on the disposition, we create a new browser tab for this. if none has
+// been given (currentTab), we update the current one.
 chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
 	var url = "https://trakt.tv/";
 	var omniSugIndex = omniSuggestions.contents.indexOf(text);
@@ -105,6 +123,13 @@ chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
 	}
 });
 
+// this function is the backbone of this whole extension.
+// it uses Trakt.tv's API to retrieve search predictions for a search on their website.
+// they don't actually have an API for this, nor have they implemented it themselves, so
+// we end up using the search function itself for this. there's many possible search types,
+// like movies, shows, episodes, persons, etc. this extension currently only supports
+// movies and shows. once a search query has been completed, we return its results to the caller
+// using Javascript's Promises.
 function traktSearch(query, type) {
 	return new Promise(function(resolve, reject) {
 		controller = new AbortController();
@@ -165,5 +190,6 @@ chrome.runtime.onConnect.addListener(function(port) {
 				port.postMessage({action: "aborted"});
 				break;
 		}
-	})
+	});
+	sPort = port;
 });

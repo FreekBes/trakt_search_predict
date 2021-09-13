@@ -1,5 +1,5 @@
+// for communication between search_predict.js and background.js.
 var spPort = chrome.runtime.connect({ name: "searcher" });
-// spPort.postMessage({action: "ping"});
 spPort.onMessage.addListener(function(msg) {
 	switch (msg["action"]) {
 		case "pong":
@@ -21,29 +21,37 @@ spPort.onMessage.addListener(function(msg) {
 var searchPredict = {
 	predicting: false,
 
+	// abort currently running prediction in background.js.
 	cancelPredict: function() {
 		spPort.postMessage({action: "abort"});
 	},
 
+	// get the current value of the search query input, trim it and start the prediction.
+	// if q seems empty, unlist all current predictions.
 	initPredict: function() {
 		if (searchPredict.predicting) {
 			searchPredict.cancelPredict();
 		}
 		var q = document.getElementById("header-search-query").value;
-		if (q != "" && q != null && q.trim() != "") {
-			searchPredict.doPredict(q);
+		if (q != null) {
+			q = q.trim();
+			if (q != "") {
+				searchPredict.doPredict(q);
+			}
 		}
 		else {
 			searchPredict.unlistPredictions();
 		}
 	},
 
+	// start the prediction process.
+	// includes extra protection against empty query values.
+	// the prediction type is retrieved from the header-search form action on Trakt.tv.
 	doPredict: function(q) {
 		if (q == null || q == "") {
 			searchPredict.unlistPredictions();
 			return;
 		}
-		// console.log("Searching for ", q);
 		searchPredict.predicting = true;
 		var searchType = document.getElementById("header-search").getAttribute("action");
 		switch (searchType) {
@@ -72,9 +80,17 @@ var searchPredict = {
 				searchType = "person";
 				break;
 		}
+		// search prediction actually happens in background.js, results are shared over spPort.
 		spPort.postMessage({ action: "search", query: q, type: searchType });
 	},
 
+	// list prediction results. this function is a bit messy due to HTML work going on.
+	// start by unlisting the current ones, then check if there's actually still a value in the query field.
+	// if there is, we create a HTML A element for every prediction, listed in a UL tag, which is added to
+	// the prediction box. if there is a TMDB id included in the suggestion results, add that to the element.
+	// This will be of use later, when retrieving the poster or image for each of the results.
+	// the A tag will feature a href attribute, linking to the page of the show or movie that's been predicted.
+	// at the end of the function, we fetch the "next" (so actually the first) poster listed by calling fetchNextPoster().
 	listPredictions: function(predictions) {
 		console.log(predictions);
 		searchPredict.unlistPredictions();
@@ -128,6 +144,15 @@ var searchPredict = {
 		searchPredict.fetchNextPoster();
 	},
 
+	// below function (and variables) handle the poster or image fetching for shows and movies.
+	// these images are not given by Trakt.tv's API, so we fetch them from other sources instead.
+	// currently, they're only fetched from TMDB (TheMovieDataBase). but first, we check the cache.
+	// all previously fetched images are stored in the local storage of the extension under a certain
+	// cacheId, which is made up by the movie or show's Trakt ID. If no image was found in cache,
+	// we start fetching them from the sources using their APIs instead.
+	// in case no image has been found after all, we use a placeholder image and start with the next
+	// prediction's image, for which this same function is called once more.
+	// as soon as postersToFetch == 0, the function stops running.
 	postersToFetch: 0,
 	lastPosterFetched: 0,
 	fetchNextPoster: function() {
@@ -185,12 +210,10 @@ var searchPredict = {
 							}
 						}
 						else {
-							// console.log("No poster source found, using placeholder");
 							searchPredict.fetchNextPoster();
 						}
 					}
 					else {
-						// console.log("Poster was stored in cache, no need to contact the API");
 						posters[i].src = data[cacheId];
 						searchPredict.fetchNextPoster();
 					}
@@ -199,10 +222,13 @@ var searchPredict = {
 		}
 	},
 
+	// remove all previous predictions from the prediction list.
 	unlistPredictions: function() {
 		document.getElementById("header-search-predictions").innerHTML = "";
 	},
 
+	// resize the search prediction box based on the width of elements above it.
+	// very useful for when the window gets resized
 	resizeSearchPredictBox: function(timeoutms) {
 		if (timeoutms == null) {
 			timeoutms = 500;
@@ -222,6 +248,11 @@ var searchPredict = {
 		}, timeoutms);
 	},
 
+	// capture keydown events for traversing the prediction list. only certain keys get caught (see switch statement).
+	// we look at which element is currently focused in the browser. if that was one of "ours", we get the index of that
+	// element based on its parent, and based on which key has been pressed, we focus on the previous or next prediction listed.
+	// by using JS's focus function, we don't have to worry about actually selecting the prediction, since it's an A element that
+	// has focus, which is usually already handled well by the browser (by pressing enter, for example).
 	keyboardControls: function(e) {
 		if (e.target.id == "header-search-query" || (e.target.type != 'text' && e.target.nodeName != 'TEXTAREA' && e.target.getAttribute("contenteditable") == null)) {
 			var key = e.keyCode || e.which;
@@ -249,6 +280,16 @@ var searchPredict = {
 	}
 };
 
+// add the necessary event handlers and elements to the current page for use with the search predict functions.
+// this means disabling the regular autocomplete for and adding an input listener to the search query field.
+// we also add click listeners to the dropdown list of all searchable types (movies, shows, episodes, etc).
+// when the search button gets clicked, we need to resize the suggestions box, since sometimes the search
+// button expands or resizes the whole form.
+// could have used some CSS for the resizing, but that doesn't allow for proper text-overflow.
+// we capture the keydown event for the whole page for keyboard controls. see the comment above the
+// searchPredict.keyboardControls function for an explanation on how this works.
+// in case there's no search query field found on the page, we don't actually do anything.
+// there's no search query to predict in this case.
 function addSearchPredict() {
 	var headerSearchQuery = document.getElementById("header-search-query");
 	if (headerSearchQuery != null) {

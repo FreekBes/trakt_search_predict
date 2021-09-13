@@ -1,3 +1,9 @@
+/*
+.dark-knight is a class applied to the body of Trakt.tv's website
+whenever dark mode is turned on. this can only be done by "VIP" members,
+for which you need to donate money to them.
+*/
+
 #header-search-predictions {
 	display: none;
 	background: #fff;
