@@ -1,5 +1,11 @@
 #header-search-predictions {
 	display: none;
+	background: #fff;
+	color: #333;
+	border: solid 1px #ccc;
+}
+
+.dark-knight #header-search-predictions {
 	background: #333;
 	color: #ccc;
 	border: solid 1px #666;
@@ -18,20 +24,31 @@
 	display: block;
 	height: 52px;
 	cursor: pointer;
-	border-top: solid 1px #666;
+	color: inherit !important;
+	border-top: solid 1px #ccc;
 	padding: 6px 12px 6px 6px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-decoration: none !important;
 }
 
+.dark-knight .header-search-prediction-item {
+	border-top: solid 1px #666;
+}
+
 .header-search-prediction-item:first-child {
 	border-top: none !important;
 }
 
-.header-search-prediction-item:hover, .header-search-prediction-item:focus {
-	background: #222 !important;
+.header-search-prediction-item:hover,
+.header-search-prediction-item:focus {
+	background: #e6e6e6 !important;
 	text-decoration: none !important;
+}
+
+.dark-knight .header-search-prediction-item:hover,
+.dark-knight .header-search-prediction-item:focus {
+	background: #222 !important;
 }
 
 .header-search-prediction-item > * {
@@ -69,7 +86,11 @@
 }
 
 .header-search-prediction-item small {
-	color: #999;
+	color: #777;
+}
+
+.dark-knight .header-search-prediction-item small {
+	color: #aaa;
 }
 
 @media (max-width: 767px) {
