@@ -5,7 +5,9 @@
 
 Are you tired of having to enter the full title of a movie or show you're searching for on Trakt.tv and then having to press search? Try this extension!
 
-With this extension installed, you will find it's much easier to search for items. When you start typing in the search field, the extension will add a list of predictions for your search. If the show or movie you're searching for is in the list, you can now click it and it will be loaded right away. Much better, right?
+With this extension installed, you will find it's much easier to search for items. When you start typing in the search field on Trakt.tv, the extension will add a list of predictions for your search. If the show or movie you're searching for is in the list, you can now click it and it will be loaded right away. Much better, right?
+
+To use this extension in your address bar, start your search with the letter "t". For example: "t silicon valley".
 
 ## Download
 - [Google Chrome](https://chrome.google.com/webstore/detail/search-predict-for-traktt/aelihdggbimbhmgnjghphaliainkknid)
