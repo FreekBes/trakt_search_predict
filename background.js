@@ -4,49 +4,75 @@ function addWordIndex(str, wrd, pos) {
 	return [str.slice(0, pos), wrd, str.slice(pos)].join("");
 }
 
-// omnibox default search
-chrome.omnibox.setDefaultSuggestion({
-	description: "Search Trakt.tv for %s"
-});
+var omniSuggestions = {
+	browser: [],
+	urls: [],
+	contents: [],
+	clear: function() {
+		omniSuggestions.browser = [];
+		omniSuggestions.urls = [];
+		omniSuggestions.contents = [];
+	}
+};
+
+var controller = new AbortController();
+
+// omnibox default search, not on firefox
+// firefox is buggy with this function,
+// not supporting %s and when set in the onInputChanged event
+// it won't include the last letter from the "text" string
+if (window.navigator.userAgent.indexOf("Firefox") == -1) {
+	chrome.omnibox.setDefaultSuggestion({
+		description: "Search Trakt.tv for %s"
+	});
+}
 
 // omnibox search suggestions
 chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 	text = text.trim();
-	console.log(text);
 	if (typeof suggest == "function") {
+		controller.abort();
 		traktSearch(text, null)
 			.then(function(results) {
+				omniSuggestions.clear();
 				if (results.length > 0)
 				{
 					var url = "https://trakt.tv/";
-					var suggestions = [];
 					var textWords = text.split(" ");
 					for (var i = 0; i < results.length; i++) {
 						var desc = results[i][results[i]["type"]]["title"];
-						desc = desc.replaceAll("\"", "&quot;");
-						desc = desc.replaceAll("'", "&apos;");
-						desc = desc.replaceAll("<", "&lt;");
-						desc = desc.replaceAll(">", "&gt;");
-						desc = desc.replaceAll("&", "&amp;");
-						for (var j = 0; j < textWords.length; j++) {
-							textWords[j] = textWords[j].replace(/\W/g, '');
-							var matchIndex = desc.toLowerCase().indexOf(textWords[j]);
-							if (matchIndex > -1) {
-								desc = addWordIndex(desc, "<match>", matchIndex);
-								desc = addWordIndex(desc, "</match>", 7 + matchIndex + textWords[j].length);
+						var descCon = desc;
+						if (window.navigator.userAgent.indexOf("Firefox") == -1) {
+							desc = desc.replaceAll("\"", "&quot;");
+							desc = desc.replaceAll("'", "&apos;");
+							desc = desc.replaceAll("<", "&lt;");
+							desc = desc.replaceAll(">", "&gt;");
+							desc = desc.replaceAll("&", "&amp;");
+							for (var j = 0; j < textWords.length; j++) {
+								textWords[j] = textWords[j].replace(/\W/g, '');
+								var matchIndex = desc.toLowerCase().indexOf(textWords[j]);
+								if (matchIndex > -1) {
+									desc = addWordIndex(desc, "<match>", matchIndex);
+									desc = addWordIndex(desc, "</match>", 7 + matchIndex + textWords[j].length);
+								}
 							}
+							desc += " <dim> - View " + results[i]["type"] + " on Trakt.tv</dim>";
 						}
-						desc += " <dim> - View " + results[i]["type"] + " on Trakt</dim>";
-						suggestions.push({
-							content: url + results[i]["type"] + "s/" + results[i][results[i]["type"]]["ids"]["slug"],
+						else {
+							desc += " - View " + results[i]["type"] + " on Trakt.tv";
+						}
+						omniSuggestions.browser.push({
+							content: descCon,
 							description: desc
 						});
+						omniSuggestions.contents.push(descCon);
+						omniSuggestions.urls.push(url + results[i]["type"] + "s/" + results[i][results[i]["type"]]["ids"]["slug"]);
 					}
-					suggest(suggestions);
 				}
+				suggest(omniSuggestions.browser);
 			})
 			.catch(function(error) {
-				// do nothing
+				console.error(error);
 			});
 	}
 });
@@ -54,8 +80,9 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 // omnibox suggestion chosen or enter hit
 chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
 	var url = "https://trakt.tv/";
-	if (text.indexOf(url) == 0) {
-		url = text;
+	var omniSugIndex = omniSuggestions.contents.indexOf(text);
+	if (omniSugIndex > -1) {
+		url = omniSuggestions.urls[omniSugIndex];
 	}
 	else if ((text != null || text != undefined) && text.trim() != "") {
 		url += "search?query=" + encodeURIComponent(text);
@@ -77,8 +104,6 @@ chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
 		chrome.tabs.update(null, {url: url});
 	}
 });
-
-var controller = new AbortController();
 
 function traktSearch(query, type) {
 	return new Promise(function(resolve, reject) {
