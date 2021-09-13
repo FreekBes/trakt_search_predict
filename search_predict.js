@@ -25,6 +25,19 @@ var searchPredict = {
 		spPort.postMessage({action: "abort"});
 	},
 
+	initPredict: function() {
+		if (searchPredict.predicting) {
+			searchPredict.cancelPredict();
+		}
+		var q = document.getElementById("header-search-query").value;
+		if (q != "" && q != null && q.trim() != "") {
+			searchPredict.doPredict(q);
+		}
+		else {
+			searchPredict.unlistPredictions();
+		}
+	},
+
 	doPredict: function(q) {
 		if (q == null || q == "") {
 			searchPredict.unlistPredictions();
@@ -212,30 +225,14 @@ function resizeSearchPredictBox(timeoutms) {
 function addSearchPredict() {
 	var headerSearchQuery = document.getElementById("header-search-query");
 	if (headerSearchQuery != null) {
-		headerSearchQuery.addEventListener("input", function(event) {
-			if (searchPredict.predicting) {
-				searchPredict.cancelPredict();
-			}
-			resizeSearchPredictBox(10);
-			var q = event.target.value;
-			if (q != "" && q != null && q.trim() != "") {
-				searchPredict.doPredict(q);
-			}
-			else {
-				searchPredict.unlistPredictions();
-			}
-		});
-		
 		headerSearchQuery.setAttribute("autocomplete", "off");
+		headerSearchQuery.addEventListener("input", searchPredict.initPredict);
 
 		var searchTypeDropdown = document.getElementById("header-search-type").children[1];
 		for (var stdi = 0; stdi < searchTypeDropdown.children.length; stdi++) {
 			searchTypeDropdown.children[stdi].addEventListener("click", function() {
-				if (searchPredict.predicting) {
-					searchPredict.cancelPredict();
-				}
 				resizeSearchPredictBox(10);
-				searchPredict.doPredict(headerSearchQuery.value.trim());
+				searchPredict.initPredict();
 			});
 		}
 
