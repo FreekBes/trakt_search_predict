@@ -84,6 +84,7 @@ var searchPredict = {
 			var pItem = document.createElement("a");
 			pItem.setAttribute("class", "header-search-prediction-item");
 			pItem.setAttribute("target", "_self");
+			pItem.setAttribute("title", predictions[i][predictions[i]["type"]]["title"] + " (" + predictions[i][predictions[i]["type"]]["year"] + ")");
 			pItem.setAttribute("onclick", "event.preventDefault(); redirect(this.href); return false;");
 			var pItemInnerHTML = '<img class="header-search-prediction-item-poster" src="https://trakt.tv/assets/placeholders/thumb/poster-78214cfcef8495a39d297ce96ddecea1.png"';
 			switch (predictions[i]["type"]) {
@@ -235,6 +236,9 @@ function addSearchPredict() {
 				searchPredict.initPredict();
 			});
 		}
+		document.getElementById("header-search-button").addEventListener("click", function() {
+			resizeSearchPredictBox(1000);
+		});
 
 		var predictionBox = document.createElement('div');
 		predictionBox.setAttribute("id", "header-search-predictions");
