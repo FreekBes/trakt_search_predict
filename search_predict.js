@@ -201,27 +201,53 @@ var searchPredict = {
 
 	unlistPredictions: function() {
 		document.getElementById("header-search-predictions").innerHTML = "";
+	},
+
+	resizeSearchPredictBox: function(timeoutms) {
+		if (timeoutms == null) {
+			timeoutms = 500;
+		}
+		setTimeout(function() {
+			var searchPredictWidth = 0;
+			searchPredictWidth += document.getElementById("header-search-button").offsetWidth;
+			searchPredictWidth += document.getElementById("header-search-query").offsetWidth;
+			searchPredictWidth += document.getElementById("header-search-type").offsetWidth;
+			if (isNaN(searchPredictWidth) || searchPredictWidth < 100) {
+				searchPredictWidth = "auto";
+			}
+			else {
+				searchPredictWidth += "px";
+			}
+			document.getElementById("header-search-predictions").style.width = searchPredictWidth;
+		}, timeoutms);
+	},
+
+	keyboardControls: function(e) {
+		if (e.target.id == "header-search-query" || (e.target.type != 'text' && e.target.nodeName != 'TEXTAREA' && e.target.getAttribute("contenteditable") == null)) {
+			var key = e.keyCode || e.which;
+			var predictAmount = document.getElementById("header-search-predictions").children.length;
+			var predictActiveIndex = -1;
+			if (document.activeElement.className.indexOf("header-search-prediction-item") > -1) {
+				predictActiveIndex = Array.prototype.indexOf.call(document.activeElement.parentNode.children, document.activeElement);
+			}
+			var prevPredictIndex = (predictActiveIndex <= 0 ? predictAmount - 1 : predictActiveIndex - 1);
+			var nextPredictIndex = (predictActiveIndex == predictAmount - 1 ? 0 : predictActiveIndex + 1);
+			switch(key) {
+				case 38:		// [ARROW_UP]
+					e.preventDefault();
+					document.getElementsByClassName("header-search-prediction-item")[prevPredictIndex].focus();
+					return true;
+					break;
+				case 40:		// [ARROW_DOWN]
+					e.preventDefault();
+					document.getElementsByClassName("header-search-prediction-item")[nextPredictIndex].focus();
+					return true;
+					break;
+			}
+		}
+		return false;
 	}
 };
-
-function resizeSearchPredictBox(timeoutms) {
-	if (timeoutms == null) {
-		timeoutms = 500;
-	}
-	setTimeout(function() {
-		var searchPredictWidth = 0;
-		searchPredictWidth += document.getElementById("header-search-button").offsetWidth;
-		searchPredictWidth += document.getElementById("header-search-query").offsetWidth;
-		searchPredictWidth += document.getElementById("header-search-type").offsetWidth;
-		if (isNaN(searchPredictWidth) || searchPredictWidth < 100) {
-			searchPredictWidth = "auto";
-		}
-		else {
-			searchPredictWidth += "px";
-		}
-		document.getElementById("header-search-predictions").style.width = searchPredictWidth;
-	}, timeoutms);
-}
 
 function addSearchPredict() {
 	var headerSearchQuery = document.getElementById("header-search-query");
@@ -232,20 +258,22 @@ function addSearchPredict() {
 		var searchTypeDropdown = document.getElementById("header-search-type").children[1];
 		for (var stdi = 0; stdi < searchTypeDropdown.children.length; stdi++) {
 			searchTypeDropdown.children[stdi].addEventListener("click", function() {
-				resizeSearchPredictBox(10);
+				searchPredict.resizeSearchPredictBox(10);
 				searchPredict.initPredict();
 			});
 		}
 		document.getElementById("header-search-button").addEventListener("click", function() {
-			resizeSearchPredictBox(1000);
+			searchPredict.resizeSearchPredictBox(1000);
 		});
 
 		var predictionBox = document.createElement('div');
 		predictionBox.setAttribute("id", "header-search-predictions");
 		document.getElementById("header-search").appendChild(predictionBox);
 
-		window.addEventListener("resize", resizeSearchPredictBox);
-		resizeSearchPredictBox();
+		window.addEventListener("resize", searchPredict.resizeSearchPredictBox);
+		searchPredict.resizeSearchPredictBox();
+
+		window.addEventListener("keydown", searchPredict.keyboardControls);
 
 		console.log("Search Predict extension loaded successfully");
 	}
