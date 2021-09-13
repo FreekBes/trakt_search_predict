@@ -32,24 +32,30 @@ var searchPredict = {
 		}
 		// console.log("Searching for ", q);
 		searchPredict.predicting = true;
-		var searchType = document.getElementById("header-search").getAttribute("action").split("/").pop();
+		var searchType = document.getElementById("header-search").getAttribute("action");
 		switch (searchType) {
-			case "shows":
+			case "/search/shows":
+			case "/search/shows/":
 				searchType = "show";
 				break;
-			case "movies":
+			case "/search/movies":
+			case "/search/movies/":
 				searchType = "movie";
 				break;
-			case "search":
+			case "/search":
+			case "/search/":
 				searchType = "movie,show";
 				break;
-			case "episodes":
+			case "/search/episodes":
+			case "/search/episodes/":
 				searchType = "episode";
 				break;
-			case "lists":
+			case "/search/lists":
+			case "/search/lists/":
 				searchType = "list";
 				break;
-			case "people":
+			case "/search/people":
+			case "/search/people/":
 				searchType = "person";
 				break;
 		}
@@ -184,7 +190,10 @@ var searchPredict = {
 	}
 };
 
-function resizeSearchPredictBox() {
+function resizeSearchPredictBox(timeoutms) {
+	if (timeoutms == null) {
+		timeoutms = 500;
+	}
 	setTimeout(function() {
 		var searchPredictWidth = 0;
 		searchPredictWidth += document.getElementById("header-search-button").offsetWidth;
@@ -197,16 +206,17 @@ function resizeSearchPredictBox() {
 			searchPredictWidth += "px";
 		}
 		document.getElementById("header-search-predictions").style.width = searchPredictWidth;
-	}, 500);
+	}, timeoutms);
 }
 
 function addSearchPredict() {
-	if (document.getElementById("header-search-query") != null) {
-		document.getElementById("header-search-query").addEventListener("input", function(event) {
+	var headerSearchQuery = document.getElementById("header-search-query");
+	if (headerSearchQuery != null) {
+		headerSearchQuery.addEventListener("input", function(event) {
 			if (searchPredict.predicting) {
 				searchPredict.cancelPredict();
 			}
-			resizeSearchPredictBox();
+			resizeSearchPredictBox(10);
 			var q = event.target.value;
 			if (q != "" && q != null && q.trim() != "") {
 				searchPredict.doPredict(q);
@@ -215,11 +225,17 @@ function addSearchPredict() {
 				searchPredict.unlistPredictions();
 			}
 		});
+		
+		headerSearchQuery.setAttribute("autocomplete", "off");
 
 		var searchTypeDropdown = document.getElementById("header-search-type").children[1];
 		for (var stdi = 0; stdi < searchTypeDropdown.children.length; stdi++) {
 			searchTypeDropdown.children[stdi].addEventListener("click", function() {
-				searchPredict.doPredict(document.getElementById("header-search-query").value.trim());
+				if (searchPredict.predicting) {
+					searchPredict.cancelPredict();
+				}
+				resizeSearchPredictBox(10);
+				searchPredict.doPredict(headerSearchQuery.value.trim());
 			});
 		}
 
