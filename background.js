@@ -33,6 +33,7 @@ if (window.navigator.userAgent.indexOf("Firefox") == -1) {
 // omnibox search suggestions. suggest parameter should be a function.
 // first, we abort any currently ongoing request to Trakt's API, useful for people who
 // type very quickly (the API call takes a while and it would clog up otherwise).
+// we also let all instances of search_predict.js know for just in case.
 // we store all results from the search predict in the global omniSuggestions object,
 // for future use (retrieving the URL from the chosen prediction).
 // on any browser that's not Firefox, we add XML styling to the search prediction,
@@ -43,7 +44,9 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 	text = text.trim();
 	if (typeof suggest == "function") {
 		controller.abort();
-		sPort.postMessage({action: "aborted"});
+		if (sPort != null) {
+			sPort.postMessage({action: "aborted"});
+		}
 		traktSearch(text, null)
 			.then(function(results) {
 				omniSuggestions.clear();
@@ -55,11 +58,8 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 						var desc = results[i][results[i]["type"]]["title"];
 						var descCon = desc;
 						if (window.navigator.userAgent.indexOf("Firefox") == -1) {
-							desc = desc.replaceAll("\"", "&quot;");
-							desc = desc.replaceAll("'", "&apos;");
 							desc = desc.replaceAll("<", "&lt;");
 							desc = desc.replaceAll(">", "&gt;");
-							desc = desc.replaceAll("&", "&amp;");
 							for (var j = 0; j < textWords.length; j++) {
 								textWords[j] = textWords[j].replace(/\W/g, '');
 								var matchIndex = desc.toLowerCase().indexOf(textWords[j]);
