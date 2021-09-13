@@ -1,13 +1,63 @@
 'use strict';
 
-// omnibox search
+function addWordIndex(str, wrd, pos) {
+	return [str.slice(0, pos), wrd, str.slice(pos)].join("");
+}
+
+// omnibox default search
 chrome.omnibox.setDefaultSuggestion({
 	description: "Search Trakt.tv for %s"
 });
 
+// omnibox search suggestions
+chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
+	text = text.trim();
+	console.log(text);
+	if (typeof suggest == "function") {
+		traktSearch(text, null)
+			.then(function(results) {
+				if (results.length > 0)
+				{
+					var url = "https://trakt.tv/";
+					var suggestions = [];
+					var textWords = text.split(" ");
+					for (var i = 0; i < results.length; i++) {
+						var desc = results[i][results[i]["type"]]["title"];
+						desc = desc.replaceAll("\"", "&quot;");
+						desc = desc.replaceAll("'", "&apos;");
+						desc = desc.replaceAll("<", "&lt;");
+						desc = desc.replaceAll(">", "&gt;");
+						desc = desc.replaceAll("&", "&amp;");
+						for (var j = 0; j < textWords.length; j++) {
+							textWords[j] = textWords[j].replace(/\W/g, '');
+							var matchIndex = desc.toLowerCase().indexOf(textWords[j]);
+							if (matchIndex > -1) {
+								desc = addWordIndex(desc, "<match>", matchIndex);
+								desc = addWordIndex(desc, "</match>", 7 + matchIndex + textWords[j].length);
+							}
+						}
+						desc += " <dim> - View " + results[i]["type"] + " on Trakt</dim>";
+						suggestions.push({
+							content: url + results[i]["type"] + "s/" + results[i][results[i]["type"]]["ids"]["slug"],
+							description: desc
+						});
+					}
+					suggest(suggestions);
+				}
+			})
+			.catch(function(error) {
+				// do nothing
+			});
+	}
+});
+
+// omnibox suggestion chosen or enter hit
 chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
 	var url = "https://trakt.tv/";
-	if ((text != null || text != undefined) && text.trim() != "") {
+	if (text.indexOf(url) == 0) {
+		url = text;
+	}
+	else if ((text != null || text != undefined) && text.trim() != "") {
 		url += "search?query=" + encodeURIComponent(text);
 	}
 	if (disposition == "newForegroundTab") {
@@ -69,6 +119,7 @@ function traktSearch(query, type) {
 	});
 }
 
+// messenger between browser extension and trakt.tv website (background.js and search_predict.js)
 chrome.runtime.onConnect.addListener(function(port) {
 	port.onMessage.addListener(function(msg) {
 		switch (msg["action"]) {
