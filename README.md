@@ -12,5 +12,4 @@ To use this extension in your address bar, start your search with the letter "t"
 ## Download
 - [Google Chrome](https://chrome.google.com/webstore/detail/search-predict-for-traktt/aelihdggbimbhmgnjghphaliainkknid)
 - [Mozilla Firefox](https://addons.mozilla.org/addon/search-predict-for-trakt-tv/)
-- [Opera](https://addons.opera.com/extensions/details/search-predict-for-trakttv/)
 - [ZIP for manual installation](https://github.com/FreekBes/trakt_search_predict/archive/master.zip)
