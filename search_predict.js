@@ -95,53 +95,54 @@ var searchPredict = {
 		console.log(predictions);
 		searchPredict.unlistPredictions();
 		var predictionBox = document.getElementById("header-search-predictions");
-		if (predictions.length > 0 && document.getElementById("header-search-query").value.trim() != "")
-		for (var i = 0; i < predictions.length; i++) {
-			var pItem = document.createElement("a");
-			pItem.setAttribute("class", "header-search-prediction-item");
-			pItem.setAttribute("target", "_self");
-			pItem.setAttribute("title", predictions[i][predictions[i]["type"]]["title"] + " (" + predictions[i][predictions[i]["type"]]["year"] + ")");
-			pItem.setAttribute("onclick", "event.preventDefault(); redirect(this.href); return false;");
-			var pItemInnerHTML = '<img class="header-search-prediction-item-poster" src="https://trakt.tv/assets/placeholders/thumb/poster-78214cfcef8495a39d297ce96ddecea1.png"';
-			switch (predictions[i]["type"]) {
-				case "movie":
-					if (predictions[i]["movie"]["ids"]["tmdb"] != null) {
-						pItemInnerHTML += ' data-type="movie" data-traktid="'+predictions[i]["movie"]["ids"]["trakt"]+'" data-postersrc="tmdb" data-id="'+predictions[i]["movie"]["ids"]["tmdb"]+'">';
-					}
-					else {
-						pItemInnerHTML += ' data-type="movie" data-traktid="'+predictions[i]["movie"]["ids"]["trakt"]+'">';
-					}
-					pItemInnerHTML += '<div class="header-search-prediction-item-text"><span class="header-search-prediction-item-type">Movie</span><span>' + predictions[i]["movie"]["title"];
-					if (predictions[i]["movie"]["year"] != null) {
-						pItemInnerHTML += " <small>(" + predictions[i]["movie"]["year"] + ")</small>";
-					}
-					pItemInnerHTML += "</span></div>";
-					pItem.setAttribute("href", "/movies/"+predictions[i]["movie"]["ids"]["slug"]);
-					break;
-				case "show":
-					if (predictions[i]["show"]["ids"]["tmdb"] != null) {
-						pItemInnerHTML += ' data-type="show" data-traktid="'+predictions[i]["show"]["ids"]["trakt"]+'" data-postersrc="tmdb" data-id="'+predictions[i]["show"]["ids"]["tmdb"]+'">';
-					}
-					else {
-						pItemInnerHTML += ' data-type="show" data-traktid="'+predictions[i]["show"]["ids"]["trakt"]+'">';
-					}
-					pItemInnerHTML += '<div class="header-search-prediction-item-text"><span class="header-search-prediction-item-type">Show</span><span>' + predictions[i]["show"]["title"];
-					if (predictions[i]["show"]["year"] != null) {
-						pItemInnerHTML += " <small>(" + predictions[i]["show"]["year"] + ")</small>";
-					}
-					pItemInnerHTML += "</span></div>";
-					pItem.setAttribute("href", "/shows/"+predictions[i]["show"]["ids"]["slug"]);
-					break;
-				default:
-					continue;
+		if (predictions.length > 0 && document.getElementById("header-search-query").value.trim() != "") {
+			for (var i = 0; i < predictions.length; i++) {
+				var pItem = document.createElement("a");
+				pItem.setAttribute("class", "header-search-prediction-item");
+				pItem.setAttribute("target", "_self");
+				pItem.setAttribute("title", predictions[i][predictions[i]["type"]]["title"] + " (" + predictions[i][predictions[i]["type"]]["year"] + ")");
+				pItem.setAttribute("onclick", "event.preventDefault(); redirect(this.href); return false;");
+				var pItemInnerHTML = '<img class="header-search-prediction-item-poster" src="https://trakt.tv/assets/placeholders/thumb/poster-78214cfcef8495a39d297ce96ddecea1.png"';
+				switch (predictions[i]["type"]) {
+					case "movie":
+						if (predictions[i]["movie"]["ids"]["tmdb"] != null) {
+							pItemInnerHTML += ' data-type="movie" data-traktid="'+predictions[i]["movie"]["ids"]["trakt"]+'" data-postersrc="tmdb" data-id="'+predictions[i]["movie"]["ids"]["tmdb"]+'">';
+						}
+						else {
+							pItemInnerHTML += ' data-type="movie" data-traktid="'+predictions[i]["movie"]["ids"]["trakt"]+'">';
+						}
+						pItemInnerHTML += '<div class="header-search-prediction-item-text"><span class="header-search-prediction-item-type">Movie</span><span>' + predictions[i]["movie"]["title"];
+						if (predictions[i]["movie"]["year"] != null) {
+							pItemInnerHTML += " <small>(" + predictions[i]["movie"]["year"] + ")</small>";
+						}
+						pItemInnerHTML += "</span></div>";
+						pItem.setAttribute("href", "/movies/"+predictions[i]["movie"]["ids"]["slug"]);
+						break;
+					case "show":
+						if (predictions[i]["show"]["ids"]["tmdb"] != null) {
+							pItemInnerHTML += ' data-type="show" data-traktid="'+predictions[i]["show"]["ids"]["trakt"]+'" data-postersrc="tmdb" data-id="'+predictions[i]["show"]["ids"]["tmdb"]+'">';
+						}
+						else {
+							pItemInnerHTML += ' data-type="show" data-traktid="'+predictions[i]["show"]["ids"]["trakt"]+'">';
+						}
+						pItemInnerHTML += '<div class="header-search-prediction-item-text"><span class="header-search-prediction-item-type">Show</span><span>' + predictions[i]["show"]["title"];
+						if (predictions[i]["show"]["year"] != null) {
+							pItemInnerHTML += " <small>(" + predictions[i]["show"]["year"] + ")</small>";
+						}
+						pItemInnerHTML += "</span></div>";
+						pItem.setAttribute("href", "/shows/"+predictions[i]["show"]["ids"]["slug"]);
+						break;
+					default:
+						continue;
+				}
+				pItem.innerHTML = pItemInnerHTML;
+				predictionBox.appendChild(pItem);
 			}
-			pItem.innerHTML = pItemInnerHTML;
-			predictionBox.appendChild(pItem);
-		}
 
-		searchPredict.lastPosterFetched = 0;
-		searchPredict.postersToFetch = predictions.length;
-		searchPredict.fetchNextPoster();
+			searchPredict.lastPosterFetched = 0;
+			searchPredict.postersToFetch = predictions.length;
+			searchPredict.fetchNextPoster();
+		}
 	},
 
 	// below function (and variables) handle the poster or image fetching for shows and movies.
@@ -264,16 +265,22 @@ var searchPredict = {
 			var prevPredictIndex = (predictActiveIndex <= 0 ? predictAmount - 1 : predictActiveIndex - 1);
 			var nextPredictIndex = (predictActiveIndex == predictAmount - 1 ? 0 : predictActiveIndex + 1);
 			switch(key) {
+				case 27:		// [ESC]
+					e.preventDefault();
+					searchPredict.unlistPredictions();
+					if (searchPredict.predicting) {
+						searchPredict.cancelPredict();
+					}
+					document.getElementById("header-search-query").focus();
+					return true;
 				case 38:		// [ARROW_UP]
 					e.preventDefault();
 					document.getElementsByClassName("header-search-prediction-item")[prevPredictIndex].focus();
 					return true;
-					break;
 				case 40:		// [ARROW_DOWN]
 					e.preventDefault();
 					document.getElementsByClassName("header-search-prediction-item")[nextPredictIndex].focus();
 					return true;
-					break;
 			}
 		}
 		return false;
@@ -288,6 +295,7 @@ var searchPredict = {
 // could have used some CSS for the resizing, but that doesn't allow for proper text-overflow.
 // we capture the keydown event for the whole page for keyboard controls. see the comment above the
 // searchPredict.keyboardControls function for an explanation on how this works.
+// we also capture mouseclicks to remove the list of predictions if clicked outside of the list container.
 // in case there's no search query field found on the page, we don't actually do anything.
 // there's no search query to predict in this case.
 function addSearchPredict() {
@@ -315,6 +323,19 @@ function addSearchPredict() {
 		searchPredict.resizeSearchPredictBox();
 
 		window.addEventListener("keydown", searchPredict.keyboardControls);
+		window.addEventListener("click", function(event) {
+			var elem = event.target;
+			while (elem) {
+				if (elem.id == "header-search") {
+					return;
+				}
+				elem = elem.parentNode;
+			}
+			searchPredict.unlistPredictions();
+			if (searchPredict.predicting) {
+				searchPredict.cancelPredict();
+			}
+		});
 
 		console.log("Search Predict extension loaded successfully");
 	}
