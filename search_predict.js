@@ -100,7 +100,7 @@ var searchPredict = {
 				var pItem = document.createElement("a");
 				pItem.setAttribute("class", "header-search-prediction-item");
 				pItem.setAttribute("target", "_self");
-				pItem.setAttribute("title", predictions[i][predictions[i]["type"]]["title"] + " (" + predictions[i][predictions[i]["type"]]["year"] + ")");
+				pItem.setAttribute("title", predictions[i][predictions[i]["type"]]["title"] + (predictions[i][predictions[i]["type"]]["year"] != null ? " (" + predictions[i][predictions[i]["type"]]["year"] + ")" : ""));
 				pItem.setAttribute("onclick", "event.preventDefault(); redirect(this.href); return false;");
 				var pItemInnerHTML = '<img class="header-search-prediction-item-poster" src="https://trakt.tv/assets/placeholders/thumb/poster-78214cfcef8495a39d297ce96ddecea1.png"';
 				switch (predictions[i]["type"]) {
@@ -113,7 +113,7 @@ var searchPredict = {
 						}
 						pItemInnerHTML += '<div class="header-search-prediction-item-text"><span class="header-search-prediction-item-type">Movie</span><span>' + predictions[i]["movie"]["title"];
 						if (predictions[i]["movie"]["year"] != null) {
-							pItemInnerHTML += " <small>(" + predictions[i]["movie"]["year"] + ")</small>";
+							pItemInnerHTML += " <small>" + predictions[i]["movie"]["year"] + "</small>";
 						}
 						pItemInnerHTML += "</span></div>";
 						pItem.setAttribute("href", "/movies/"+predictions[i]["movie"]["ids"]["slug"]);
@@ -127,7 +127,7 @@ var searchPredict = {
 						}
 						pItemInnerHTML += '<div class="header-search-prediction-item-text"><span class="header-search-prediction-item-type">Show</span><span>' + predictions[i]["show"]["title"];
 						if (predictions[i]["show"]["year"] != null) {
-							pItemInnerHTML += " <small>(" + predictions[i]["show"]["year"] + ")</small>";
+							pItemInnerHTML += " <small>" + predictions[i]["show"]["year"] + "</small>";
 						}
 						pItemInnerHTML += "</span></div>";
 						pItem.setAttribute("href", "/shows/"+predictions[i]["show"]["ids"]["slug"]);
