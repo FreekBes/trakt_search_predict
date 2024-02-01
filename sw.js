@@ -4,7 +4,7 @@ function addWordIndex(str, wrd, pos) {
 	return [str.slice(0, pos), wrd, str.slice(pos)].join("");
 }
 
-var omniSuggestions = {
+const omniSuggestions = {
 	browser: [],
 	urls: [],
 	contents: [],
@@ -15,31 +15,31 @@ var omniSuggestions = {
 	}
 };
 
-var controller = new AbortController();
-var sPort = null;
+let controller = new AbortController();
+let sPort = null;
 
-// omnibox default search, not on firefox.
-// firefox is buggy with this function,
+// Omnibox default search, not on firefox.
+// Firefox is buggy with this function,
 // not supporting %s and when set in the onInputChanged event
 // with the "text" parameter from that function,
 // it won't include the last letter from the "text" string.
-// kinda weird. just don't include it then.
+// Kinda weird. Just don't include it then.
 if (navigator.userAgent.indexOf("Firefox") == -1) {
 	chrome.omnibox.setDefaultSuggestion({
 		description: "Search Trakt.tv for %s"
 	});
 }
 
-// omnibox search suggestions. suggest parameter should be a function.
-// first, we abort any currently ongoing request to Trakt's API, useful for people who
+// Omnibox search suggestions. suggest parameter should be a function.
+// First, we abort any currently ongoing request to Trakt's API, useful for people who
 // type very quickly (the API call takes a while and it would clog up otherwise).
-// we also let all instances of search_predict.js know for just in case.
-// we store all results from the search predict in the global omniSuggestions object,
+// We also let all instances of search_predict.js know for just in case.
+// We store all results from the search predict in the global omniSuggestions object,
 // for future use (retrieving the URL from the chosen prediction).
-// on any browser that's not Firefox, we add XML styling to the search prediction,
+// On any browser that's not Firefox, we add XML styling to the search prediction,
 // as seen on https://developer.chrome.com/docs/extensions/reference/omnibox/#type-SuggestResult
 // Mozilla Firefox doesn't seem to support this XML styling.
-// we add all the suggestions to the object and let the browser know this list is ready.
+// We add all the suggestions to the object and let the browser know this list is ready.
 chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 	text = text.trim();
 	if (typeof suggest == "function") {
@@ -52,17 +52,17 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 				omniSuggestions.clear();
 				if (results.length > 0)
 				{
-					var url = "https://trakt.tv/";
-					var textWords = text.split(" ");
-					for (var i = 0; i < results.length; i++) {
-						var desc = results[i][results[i]["type"]]["title"];
-						var descCon = desc;
+					const url = "https://trakt.tv/";
+					const textWords = text.split(" ");
+					for (let i = 0; i < results.length; i++) {
+						let desc = results[i][results[i]["type"]]["title"];
+						const descCon = desc;
 						if (navigator.userAgent.indexOf("Firefox") == -1) {
 							desc = desc.replaceAll("<", "&lt;");
 							desc = desc.replaceAll(">", "&gt;");
-							for (var j = 0; j < textWords.length; j++) {
+							for (let j = 0; j < textWords.length; j++) {
 								textWords[j] = textWords[j].replace(/\W/g, '');
-								var matchIndex = desc.toLowerCase().indexOf(textWords[j]);
+								const matchIndex = desc.toLowerCase().indexOf(textWords[j]);
 								if (matchIndex > -1) {
 									desc = addWordIndex(desc, "<match>", matchIndex);
 									desc = addWordIndex(desc, "</match>", 7 + matchIndex + textWords[j].length);
@@ -89,16 +89,16 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 	}
 });
 
-// this is the function that's run when the user has chosen one of our extension's
-// search suggestions. it first checks if it was any of our suggestions from
+// This is the function that's run when the user has chosen one of our extension's
+// search suggestions. It first checks if it was any of our suggestions from
 // onInputChanged event's function above, if it was we get the url from there.
-// in case not, we create a new search on the Trakt.tv website with the query
+// In case not, we create a new search on the Trakt.tv website with the query
 // given to us in the address bar.
-// based on the disposition, we create a new browser tab for this. if none has
+// Based on the disposition, we create a new browser tab for this. If none has
 // been given (currentTab), we update the current one.
 chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
-	var url = "https://trakt.tv/";
-	var omniSugIndex = omniSuggestions.contents.indexOf(text);
+	let url = "https://trakt.tv/";
+	const omniSugIndex = omniSuggestions.contents.indexOf(text);
 	if (omniSugIndex > -1) {
 		url = omniSuggestions.urls[omniSugIndex];
 	}
@@ -123,12 +123,12 @@ chrome.omnibox.onInputEntered.addListener(function(text, disposition) {
 	}
 });
 
-// this function is the backbone of this whole extension.
-// it uses Trakt.tv's API to retrieve search predictions for a search on their website.
-// they don't actually have an API for this, nor have they implemented it themselves, so
-// we end up using the search function itself for this. there's many possible search types,
-// like movies, shows, episodes, persons, etc. this extension currently only supports
-// movies and shows. once a search query has been completed, we return its results to the caller
+// This function is the backbone of this whole extension.
+// It uses Trakt.tv's API to retrieve search predictions for a search on their website.
+// They don't actually have an API for this, nor have they implemented it themselves, so
+// we end up using the search function itself for this. There's many possible search types,
+// like movies, shows, episodes, persons, etc. This extension currently only supports
+// movies and shows. Once a search query has been completed, we return its results to the caller
 // using Javascript's Promises.
 function traktSearch(query, type) {
 	return new Promise(function(resolve, reject) {
@@ -136,8 +136,8 @@ function traktSearch(query, type) {
 		if (type == null || type == "" || type == "null") {
 			type = "movie,show";
 		}
-		// var possibles = ["movie,show", "movie", "show", "episode", "person", "list"];
-		var possibles = ["movie,show", "movie", "show"];
+		// const possibles = ["movie,show", "movie", "show", "episode", "person", "list"];
+		const possibles = ["movie,show", "movie", "show"];
 		if (possibles.includes(type)) {
 			fetch('https://api.trakt.tv/search/'+type+'?query='+encodeURIComponent(query)+'&page=1&limit=4', {
 				method: 'get',
@@ -163,13 +163,13 @@ function traktSearch(query, type) {
 				});
 		}
 		else {
-			// requested type is not supported by this extension
+			// Requested type is not supported by this extension
 			resolve([]);
 		}
 	});
 }
 
-// messenger between browser extension and trakt.tv website (background.js and search_predict.js)
+// Messenger between browser extension and trakt.tv website (sw.js and search_predict.js)
 chrome.runtime.onConnect.addListener(function(port) {
 	port.onMessage.addListener(function(msg) {
 		switch (msg["action"]) {
