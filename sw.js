@@ -24,7 +24,7 @@ var sPort = null;
 // with the "text" parameter from that function,
 // it won't include the last letter from the "text" string.
 // kinda weird. just don't include it then.
-if (window.navigator.userAgent.indexOf("Firefox") == -1) {
+if (navigator.userAgent.indexOf("Firefox") == -1) {
 	chrome.omnibox.setDefaultSuggestion({
 		description: "Search Trakt.tv for %s"
 	});
@@ -57,7 +57,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 					for (var i = 0; i < results.length; i++) {
 						var desc = results[i][results[i]["type"]]["title"];
 						var descCon = desc;
-						if (window.navigator.userAgent.indexOf("Firefox") == -1) {
+						if (navigator.userAgent.indexOf("Firefox") == -1) {
 							desc = desc.replaceAll("<", "&lt;");
 							desc = desc.replaceAll(">", "&gt;");
 							for (var j = 0; j < textWords.length; j++) {

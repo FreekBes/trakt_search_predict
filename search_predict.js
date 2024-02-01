@@ -1,9 +1,11 @@
+console.log("[Search Predict for Trakt.tv] Starting up...");
+
 // for communication between search_predict.js and background.js.
 var spPort = chrome.runtime.connect({ name: "searcher" });
 spPort.onMessage.addListener(function(msg) {
 	switch (msg["action"]) {
 		case "pong":
-			console.log("pong");
+			console.log("[Search Predict for Trakt.tv] pong");
 			break;
 		case "results":
 			searchPredict.predicting = false;
@@ -92,7 +94,7 @@ var searchPredict = {
 	// the A tag will feature a href attribute, linking to the page of the show or movie that's been predicted.
 	// at the end of the function, we fetch the "next" (so actually the first) poster listed by calling fetchNextPoster().
 	listPredictions: function(predictions) {
-		console.log(predictions);
+		console.log("[Search Predict for Trakt.tv] Predictions:", predictions);
 		searchPredict.unlistPredictions();
 		var predictionBox = document.getElementById("header-search-predictions");
 		if (predictions.length > 0 && document.getElementById("header-search-query").value.trim() != "") {
@@ -158,7 +160,7 @@ var searchPredict = {
 	lastPosterFetched: 0,
 	fetchNextPoster: function() {
 		if (searchPredict.lastPosterFetched < searchPredict.postersToFetch) {
-			// console.log("Fetching poster " + (searchPredict.lastPosterFetched+1) + " / " + searchPredict.postersToFetch);
+			// console.log("[Search Predict for Trakt.tv] Fetching poster " + (searchPredict.lastPosterFetched+1) + " / " + searchPredict.postersToFetch);
 			var posters = document.getElementsByClassName("header-search-prediction-item-poster");
 			var i = searchPredict.lastPosterFetched;
 			searchPredict.lastPosterFetched += 1;
@@ -167,7 +169,7 @@ var searchPredict = {
 				chrome.storage.local.get(cacheId, function(data) {
 					if (typeof data[cacheId] === 'undefined') {
 						if (posters[i].hasAttribute("data-postersrc")) {
-							// console.log("Contacting API...");
+							// console.log("[Search Predict for Trakt.tv] Contacting API...");
 							switch (posters[i].getAttribute("data-postersrc")) {
 								case "tmdb":
 									var fetchUrl = 'https://api.themoviedb.org/3/';
@@ -337,10 +339,10 @@ function addSearchPredict() {
 			}
 		});
 
-		console.log("Search Predict extension loaded successfully");
+		console.log("[Search Predict for Trakt.tv] Search Predict extension loaded successfully");
 	}
 	else {
-		console.warn("Could not load Search Predict, as no search box has been found on this page.");
+		console.warn("[Search Predict for Trakt.tv] Could not load Search Predict, as no search box has been found on this page.");
 	}
 
 	document.addEventListener("turbolinks:load", function() {
