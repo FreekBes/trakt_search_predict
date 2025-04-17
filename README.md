@@ -3,6 +3,10 @@
 
 ---
 
+**DEPRECATED:** with the Trakt makeover of October 2024, this feature was implemented in the website itself and this extension is no longer neccessary. Development has been ceased. This repository remains available for archival purposes.
+
+---
+
 Are you tired of having to enter the full title of a movie or show you're searching for on Trakt.tv and then having to press search? Try this extension!
 
 With this extension installed, you will find it's much easier to search for items. When you start typing in the search field on Trakt.tv, the extension will add a list of predictions for your search. If the show or movie you're searching for is in the list, you can now click it and it will be loaded right away. Much better, right?
